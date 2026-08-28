@@ -107,20 +107,23 @@ tbody tr:nth-child(even):hover{background:#f2f6fb}
 .empty-state{text-align:center;padding:50px 20px;color:var(--text-muted);font-size:14px}
 
 /* ── Lightbox ── */
-.lightbox{position:fixed;inset:0;background:rgba(8,13,24,.92);display:none;align-items:center;justify-content:center;z-index:100;backdrop-filter:blur(4px)}
+.lightbox{position:fixed;inset:0;background:rgba(8,13,24,.93);display:none;align-items:center;justify-content:center;z-index:100;backdrop-filter:blur(4px)}
 .lightbox.open{display:flex}
-.lightbox-inner{width:min(92vw,900px);display:flex;flex-direction:column;align-items:center;gap:10px}
-.lightbox-frame{width:100%;height:min(82vh,700px);border-radius:10px;border:none;background:#fff;box-shadow:0 20px 60px rgba(0,0,0,.6)}
+.lightbox-inner{max-width:min(92vw,1000px);max-height:92vh;display:flex;flex-direction:column;align-items:center;gap:10px}
+.lightbox-img-wrap{position:relative;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.04);border-radius:12px;overflow:hidden;max-width:100%}
+.lightbox-img-wrap img{max-width:min(88vw,960px);max-height:78vh;border-radius:10px;border:1px solid rgba(255,255,255,.1);box-shadow:0 24px 64px rgba(0,0,0,.7);object-fit:contain;display:block;background:#fff}
+.lightbox-img-wrap iframe{width:min(88vw,960px);height:78vh;border:none;border-radius:10px;display:block}
+.lb-spinner{color:rgba(255,255,255,.5);font-size:13px;padding:60px 40px}
 .lightbox-caption{color:#e7ecf5;font-size:13px;text-align:center}
 .lightbox-caption b{color:#fff}
-.lightbox-close{position:absolute;top:18px;right:20px;color:#fff;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.22);width:36px;height:36px;border-radius:50%;font-size:17px;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:101}
-.lightbox-close:hover{background:rgba(255,255,255,.2)}
-.lightbox-nav{position:absolute;top:50%;transform:translateY(-50%);background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.22);color:#fff;width:42px;height:42px;border-radius:50%;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:101}
+.lightbox-close{position:absolute;top:18px;right:20px;color:#fff;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.22);width:38px;height:38px;border-radius:50%;font-size:17px;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:101}
+.lightbox-close:hover{background:rgba(255,255,255,.22)}
+.lightbox-nav{position:absolute;top:50%;transform:translateY(-50%);background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.22);color:#fff;width:44px;height:44px;border-radius:50%;font-size:22px;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:101}
 .lightbox-nav:hover{background:rgba(255,255,255,.2)}
 .lightbox-nav.prev{left:16px}
 .lightbox-nav.next{right:16px}
 .lightbox-nav:disabled{opacity:.2;cursor:not-allowed}
-.lb-open-btn{display:inline-flex;align-items:center;gap:5px;margin-top:4px;font-size:12px;font-weight:600;color:#fff;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);padding:5px 14px;border-radius:6px;cursor:pointer;text-decoration:none}
+.lb-open-btn{display:inline-flex;align-items:center;gap:5px;margin-top:2px;font-size:12px;font-weight:600;color:#fff;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.22);padding:5px 14px;border-radius:6px;cursor:pointer;text-decoration:none}
 .lb-open-btn:hover{background:rgba(255,255,255,.2)}
 
 /* ── Toast ── */
@@ -228,7 +231,9 @@ tbody tr:nth-child(even):hover{background:#f2f6fb}
 <div class="lightbox" id="lightbox" onclick="closeLbOutside(event)">
   <button class="lightbox-nav prev" id="lbPrev" onclick="lbNav(-1)">&#8249;</button>
   <div class="lightbox-inner">
-    <iframe id="lbFrame" class="lightbox-frame" src="" allowfullscreen></iframe>
+    <div class="lightbox-img-wrap" id="lbImgWrap">
+      <span class="lb-spinner" id="lbSpinner">⏳ Cargando imagen…</span>
+    </div>
     <div class="lightbox-caption" id="lbCaption"></div>
     <a class="lb-open-btn" id="lbOpenBtn" href="#" target="_blank" rel="noopener">🔗 Abrir en Google Drive</a>
   </div>
@@ -448,8 +453,18 @@ function rowHtml(r, idx) {
   const imgs = [];
   const tEst = driveThumb(r.fotoEstadoUrl);
   const tRep = driveThumb(r.fotoRepUrl);
-  if (tEst) imgs.push({ previewUrl: drivePreviewUrl(r.fotoEstadoUrl), driveUrl: driveFileUrl(r.fotoEstadoUrl), label: 'Foto Estado' });
-  if (tRep) imgs.push({ previewUrl: drivePreviewUrl(r.fotoRepUrl),    driveUrl: driveFileUrl(r.fotoRepUrl),    label: 'Foto Reparación' });
+  if (tEst) imgs.push({
+    thumbUrl:   driveThumb(r.fotoEstadoUrl, 'w2048-h2048'),
+    previewUrl: drivePreviewUrl(r.fotoEstadoUrl),
+    driveUrl:   driveFileUrl(r.fotoEstadoUrl),
+    label: 'Foto Estado'
+  });
+  if (tRep) imgs.push({
+    thumbUrl:   driveThumb(r.fotoRepUrl, 'w2048-h2048'),
+    previewUrl: drivePreviewUrl(r.fotoRepUrl),
+    driveUrl:   driveFileUrl(r.fotoRepUrl),
+    label: 'Foto Reparación'
+  });
   rowLbData[idx] = imgs;
 
   const accionCell = r.accion
@@ -521,23 +536,46 @@ function openLb(rowIdx, imgIdx) {
   lbIndex  = Math.min(imgIdx, imgs.length - 1);
   showLb();
 }
+
 function showLb() {
-  const img = lbImages[lbIndex];
-  document.getElementById('lbFrame').src = img.previewUrl || '';
+  const entry = lbImages[lbIndex];
   document.getElementById('lbCaption').innerHTML =
-    `<b>${esc(img.label)}</b> &nbsp; ${lbIndex+1} / ${lbImages.length}`;
-  document.getElementById('lbOpenBtn').href = img.driveUrl || '#';
+    `<b>${esc(entry.label)}</b> &nbsp; ${lbIndex+1} / ${lbImages.length}`;
+  document.getElementById('lbOpenBtn').href = entry.driveUrl || '#';
   document.getElementById('lbPrev').disabled = lbIndex <= 0;
   document.getElementById('lbNext').disabled = lbIndex >= lbImages.length - 1;
   document.getElementById('lightbox').classList.add('open');
+
+  const wrap = document.getElementById('lbImgWrap');
+  // Show spinner while loading
+  wrap.innerHTML = '<span class="lb-spinner" id="lbSpinner">⏳ Cargando imagen…</span>';
+
+  // Try loading as <img> with Drive thumbnail (large size)
+  const img = new Image();
+  img.style.cssText = 'max-width:min(88vw,960px);max-height:78vh;border-radius:10px;border:1px solid rgba(255,255,255,.1);box-shadow:0 24px 64px rgba(0,0,0,.7);object-fit:contain;display:block;background:#fff';
+  img.alt = entry.label;
+
+  img.onload = function() {
+    wrap.innerHTML = '';
+    wrap.appendChild(img);
+  };
+  img.onerror = function() {
+    // Fallback: show Drive preview iframe
+    wrap.innerHTML = `<iframe src="${esc(entry.previewUrl)}" style="width:min(88vw,960px);height:78vh;border:none;border-radius:10px;display:block" allowfullscreen></iframe>`;
+  };
+
+  // Use the largest thumbnail available
+  img.src = entry.thumbUrl;
 }
+
 function lbNav(dir) {
   lbIndex = Math.max(0, Math.min(lbImages.length-1, lbIndex+dir));
   showLb();
 }
 function closeLightbox() {
   document.getElementById('lightbox').classList.remove('open');
-  document.getElementById('lbFrame').src = '';
+  document.getElementById('lbImgWrap').innerHTML =
+    '<span class="lb-spinner" id="lbSpinner">⏳ Cargando imagen…</span>';
 }
 function closeLbOutside(e) {
   if (e.target === document.getElementById('lightbox')) closeLightbox();
